@@ -1,4 +1,6 @@
 #include "cpu.h"
+#include <stdio.h>
+#include <string.h>
 
 #define DATA_LEN 6
 
@@ -41,6 +43,41 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
 }
 
 /**
+ * Helper Functions
+ */
+
+/**
+ * Read and return ram at address
+ */
+unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address) {
+  return cpu->ram[address];
+}
+
+/**
+ * Write value to ram at address
+ */
+void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) {
+  cpu->ram[address] = value;
+}
+
+/**
+ * Figure out how many operands this next instruction requires
+ */
+
+int num_operands_needed(unsigned char IR) {
+  switch (IR) {
+    case LDI:
+      return 2;
+
+    case PRN: 
+      return 1;
+
+    case HLT:
+      return 0;
+  }
+}
+
+/**
  * Run the CPU
  */
 void cpu_run(struct cpu *cpu)
@@ -50,30 +87,40 @@ void cpu_run(struct cpu *cpu)
   while (running) {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
-    unsigned char curr_address = cpu->PC;
-
-    unsigned char address, value;
+    unsigned char IR = cpu->ram[cpu->PC];
+    
     // 2. Figure out how many operands this next instruction requires
+    int num_of_operands = num_operands_needed(IR);
+
     // 3. Get the appropriate value(s) of the operands following this instruction
+    unsigned char operandA, operandB;
+
+    switch (num_of_operands) {
+      case 1:
+        operandA = cpu_ram_read(cpu, cpu->PC + 1);
+      case 2:
+        operandA = cpu_ram_read(cpu, cpu->PC + 1);
+        operandB = cpu_ram_read(cpu, cpu->PC + 2);
+      default:
+        break;
+    }
+
     // 4. switch() over it to decide on a course of action.
-    switch (cpu->ram[curr_address]) {
+    switch (IR) {
       // 5. Do whatever the instruction should do according to the spec.
       // 6. Move the PC to the next instruction.
-      case 0b10000010:
-        address = curr_address + 1;
-        value = curr_address + 2;
-        cpu_ram_write(cpu, address, value);
-        curr_address += 3;
-      case 0b01000111:
-        address = curr_address + 1;
-        value = cpu_ram_read(cpu, address);
-        printf("%d", value);
-        curr_address += 2;
-      case 0b00000001:
-        running = 0;
-        curr_address++;
+      case LDI:
+        cpu_ram_write(cpu, operandA, operandB);
+        cpu->PC += 3;
         break;
-
+      case PRN:
+        printf("%d", cpu_ram_read(cpu, operandA));
+        cpu->PC += 2;
+        break;
+      case HLT:
+        running = 0;
+        cpu->PC++;
+        break;
     }
   }
 }
@@ -84,15 +131,7 @@ void cpu_run(struct cpu *cpu)
 void cpu_init(struct cpu *cpu)
 {
   cpu->PC = 0;
-  memset(cpu->ram, 0, 8);
-  memset(cpu->registers, 0, 256);
+  memset(cpu->ram, 0, 256);
+  memset(cpu->registers, 0, 8);
   cpu->registers[R7] = SP; 
-}
-
-unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address) {
-  return cpu->ram[address];
-}
-
-void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) {
-  cpu->ram[address] = value;
 }
