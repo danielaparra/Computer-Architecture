@@ -50,11 +50,31 @@ void cpu_run(struct cpu *cpu)
   while (running) {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
+    unsigned char curr_address = cpu->PC;
+
+    unsigned char address, value;
     // 2. Figure out how many operands this next instruction requires
     // 3. Get the appropriate value(s) of the operands following this instruction
     // 4. switch() over it to decide on a course of action.
-    // 5. Do whatever the instruction should do according to the spec.
-    // 6. Move the PC to the next instruction.
+    switch (cpu->ram[curr_address]) {
+      // 5. Do whatever the instruction should do according to the spec.
+      // 6. Move the PC to the next instruction.
+      case 0b10000010:
+        address = curr_address + 1;
+        value = curr_address + 2;
+        cpu_ram_write(cpu, address, value);
+        curr_address += 3;
+      case 0b01000111:
+        address = curr_address + 1;
+        value = cpu_ram_read(cpu, address);
+        printf("%d", value);
+        curr_address += 2;
+      case 0b00000001:
+        running = 0;
+        curr_address++;
+        break;
+
+    }
   }
 }
 
@@ -64,14 +84,15 @@ void cpu_run(struct cpu *cpu)
 void cpu_init(struct cpu *cpu)
 {
   cpu->PC = 0;
-  memset( cpu->memory, 0, 8);
+  memset(cpu->ram, 0, 8);
   memset(cpu->registers, 0, 256);
+  cpu->registers[R7] = SP; 
 }
 
-void cpu_ram_read(struct cpu *cpu, unsigned char *address) {
-  return cpu->memory[address];
+unsigned char cpu_ram_read(struct cpu *cpu, unsigned char address) {
+  return cpu->ram[address];
 }
 
-void cpu_ram_write(struct cpu *cpu, unsigned char *address, unsigned char value) {
-  cpu->memory[address] = value;
+void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) {
+  cpu->ram[address] = value;
 }
