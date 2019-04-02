@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define DATA_LEN 6
@@ -7,25 +8,62 @@
 /**
  * Load the binary bytes from a .ls8 source file into a RAM array
  */
-void cpu_load(struct cpu *cpu)
+void cpu_load(struct cpu *cpu, int argc, char** argv)
 {
-  char data[DATA_LEN] = {
-    // From print8.ls8
-    0b10000010, // LDI R0,8
-    0b00000000,
-    0b00001000,
-    0b01000111, // PRN R0
-    0b00000000,
-    0b00000001  // HLT
-  };
+  // char data[DATA_LEN] = {
+  //   // From print8.ls8
+  //   0b10000010, // LDI R0,8
+  //   0b00000000,
+  //   0b00001000,
+  //   0b01000111, // PRN R0
+  //   0b00000000,
+  //   0b00000001  // HLT
+  // };
 
-  int address = 0;
+  // int address = 0;
 
-  for (int i = 0; i < DATA_LEN; i++) {
-    cpu->ram[address++] = data[i];
-  }
+  // for (int i = 0; i < DATA_LEN; i++) {
+  //   cpu->ram[address++] = data[i];
+  // }
 
   // TODO: Replace this with something less hard-coded
+  FILE *fp;
+  char line[1024];
+
+  if (argc != 2) {
+    printf("usage: fileio filename\n");
+    return;
+  }
+
+  fp = fopen(argv[1], "r");
+
+  if (fp == NULL) {
+    printf("Error opening file %s\n", argv[1]);
+  }
+  
+  int address = 0;
+  // printf("here1\n");
+  while (fgets(line, 1024, fp) != NULL) {
+  // printf("here2\n");
+    if (line[0] == '#') {
+      // printf("here skip\n");
+      continue;
+    }
+    // printf("here3\n");
+    char *binary_string = strndup(line, 8);
+    // printf("%s", *binary_string);
+    // printf("here4\n");
+    unsigned char binary_val = strtol(binary_string, NULL, 2);
+    // printf("here5\n");
+    cpu->ram[address] = binary_val;
+    // printf("%d\n", cpu->ram[address]);
+    free(binary_string);
+    address++;
+  }
+
+  // printf("this\n");
+  fclose(fp);
+  
 }
 
 /**
@@ -72,7 +110,7 @@ int num_operands_needed(unsigned char IR) {
     case PRN: 
       return 1;
 
-    case HLT:
+    default:
       return 0;
   }
 }
