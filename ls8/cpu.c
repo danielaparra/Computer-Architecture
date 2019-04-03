@@ -150,9 +150,14 @@ void cpu_run(struct cpu *cpu)
         break;
       case MUL:
         cpu->registers[operandA] *= cpu->registers[operandB];
-        // printf("%d\n", cpu->registers[operandA]);
         cpu->PC += 3;
         break;
+      case POP:
+        unsigned char stack_pointer = cpu->registers[R7];
+        cpu->registers[operandA] = cpu_ram_read(cpu, stack_pointer);
+        cpu->registers[R7]++;
+      
+
       case HLT:
         running = 0;
         cpu->PC++;
