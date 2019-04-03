@@ -56,6 +56,7 @@ void cpu_load(struct cpu *cpu, int argc, char** argv)
     unsigned char binary_val = strtol(binary_string, NULL, 2);
     // printf("here5\n");
     cpu->ram[address] = binary_val;
+    // cpu_ram_write(cpu, address, binary_val);
     // printf("%d\n", cpu->ram[address]);
     free(binary_string);
     address++;
@@ -107,6 +108,9 @@ int num_operands_needed(unsigned char IR) {
     case LDI:
       return 2;
 
+    case MUL:
+      return 2;
+
     case PRN: 
       return 1;
 
@@ -128,7 +132,7 @@ void cpu_run(struct cpu *cpu)
     unsigned char IR = cpu->ram[cpu->PC];
     
     // 2. Figure out how many operands this next instruction requires
-    int num_of_operands = num_operands_needed(IR);
+    int num_of_operands = num_operands_needed(IR); 
 
     // 3. Get the appropriate value(s) of the operands following this instruction
     unsigned char operandA, operandB;
@@ -148,12 +152,17 @@ void cpu_run(struct cpu *cpu)
       // 5. Do whatever the instruction should do according to the spec.
       // 6. Move the PC to the next instruction.
       case LDI:
-        cpu_ram_write(cpu, operandA, operandB);
+        cpu->registers[operandA] = operandB;
         cpu->PC += 3;
         break;
       case PRN:
-        printf("%d", cpu_ram_read(cpu, operandA));
+        printf("%d\n", cpu->registers[operandA]);
         cpu->PC += 2;
+        break;
+      case MUL:
+        cpu->registers[operandA] *= cpu->registers[operandB];
+        // printf("%d\n", cpu->registers[operandA]);
+        cpu->PC += 3;
         break;
       case HLT:
         running = 0;
