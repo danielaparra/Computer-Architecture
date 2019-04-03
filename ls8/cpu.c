@@ -104,19 +104,8 @@ void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) 
  */
 
 int num_operands_needed(unsigned char IR) {
-  switch (IR) {
-    case LDI:
-      return 2;
-
-    case MUL:
-      return 2;
-
-    case PRN: 
-      return 1;
-
-    default:
-      return 0;
-  }
+  unsigned char AA = IR>>6;
+  return (int)AA;
 }
 
 /**
@@ -129,7 +118,7 @@ void cpu_run(struct cpu *cpu)
   while (running) {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
-    unsigned char IR = cpu->ram[cpu->PC];
+    unsigned char IR = cpu_ram_read(cpu, cpu->PC);
     
     // 2. Figure out how many operands this next instruction requires
     int num_of_operands = num_operands_needed(IR); 
