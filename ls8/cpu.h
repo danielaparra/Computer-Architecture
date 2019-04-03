@@ -28,8 +28,8 @@ enum alu_op {
 #define PRN  0b01000111
 #define MUL  0b10100010
 #define R7   0b00000111
-#define POP  0b01000101
-#define PUSH 0b01000110
+#define POP  0b01000110
+#define PUSH 0b01000101
 #define SP   0xF4
 
 // TODO: more instructions here. These can be used in cpu_run().

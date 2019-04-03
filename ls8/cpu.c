@@ -142,6 +142,7 @@ void cpu_run(struct cpu *cpu)
       // 6. Move the PC to the next instruction.
       case LDI:
         cpu->registers[operandA] = operandB;
+        //printf("%d\n", cpu->registers[operandA]);
         cpu->PC += 3;
         break;
       case PRN:
@@ -153,11 +154,15 @@ void cpu_run(struct cpu *cpu)
         cpu->PC += 3;
         break;
       case POP:
-        unsigned char stack_pointer = cpu->registers[R7];
-        cpu->registers[operandA] = cpu_ram_read(cpu, stack_pointer);
-        cpu->registers[R7]++;
-      
-
+        cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
+        cpu->registers[R7] += 1;
+        cpu->PC += 2;
+        break;
+      case PUSH:
+        cpu->registers[R7] -= 1;
+        cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[operandA]);
+        cpu->PC += 2;
+        break;
       case HLT:
         running = 0;
         cpu->PC++;
