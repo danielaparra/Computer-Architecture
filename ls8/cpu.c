@@ -125,21 +125,18 @@ void cpu_run(struct cpu *cpu)
         break;
       case POP:
         cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
-        cpu->registers[R7] += 1;
+        cpu->registers[R7]++;
         cpu->PC += 2;
         break;
       case PUSH:
-        cpu->registers[R7] -= 1;
+        cpu->registers[R7]--;
         cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[operandA]);
         cpu->PC += 2;
         break;
       case CALL:
-        cpu->registers[R7] -= 1;
-        //printf("cpu->PC + 2: %d\n", cpu->PC + 2);
+        cpu->registers[R7]--;
         cpu_ram_write(cpu, cpu->registers[R7], cpu->PC + 2);
-        //printf("operandA: %d\n", operandA);
         cpu->PC = cpu->registers[operandA];
-        //printf("cpu->PC: %d\n", cpu->PC);
         break;
       case RET:
         cpu->PC = cpu_ram_read(cpu, cpu->registers[R7]);
