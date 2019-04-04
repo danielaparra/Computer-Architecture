@@ -56,6 +56,7 @@ void cpu_load(struct cpu *cpu, int argc, char** argv)
     unsigned char binary_val = strtol(binary_string, NULL, 2);
     // printf("here5\n");
     cpu->ram[address] = binary_val;
+    // cpu_ram_write(cpu, address, binary_val);
     // printf("%d\n", cpu->ram[address]);
     free(binary_string);
     address++;
@@ -103,16 +104,8 @@ void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) 
  */
 
 int num_operands_needed(unsigned char IR) {
-  switch (IR) {
-    case LDI:
-      return 2;
-
-    case PRN: 
-      return 1;
-
-    default:
-      return 0;
-  }
+  unsigned char AA = IR>>6;
+  return (int)AA;
 }
 
 /**
@@ -125,10 +118,10 @@ void cpu_run(struct cpu *cpu)
   while (running) {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
-    unsigned char IR = cpu->ram[cpu->PC];
+    unsigned char IR = cpu_ram_read(cpu, cpu->PC);
     
     // 2. Figure out how many operands this next instruction requires
-    int num_of_operands = num_operands_needed(IR);
+    int num_of_operands = num_operands_needed(IR); 
 
     // 3. Get the appropriate value(s) of the operands following this instruction
     unsigned char operandA, operandB;
@@ -148,11 +141,26 @@ void cpu_run(struct cpu *cpu)
       // 5. Do whatever the instruction should do according to the spec.
       // 6. Move the PC to the next instruction.
       case LDI:
-        cpu_ram_write(cpu, operandA, operandB);
+        cpu->registers[operandA] = operandB;
+        //printf("%d\n", cpu->registers[operandA]);
         cpu->PC += 3;
         break;
       case PRN:
-        printf("%d", cpu_ram_read(cpu, operandA));
+        printf("%d\n", cpu->registers[operandA]);
+        cpu->PC += 2;
+        break;
+      case MUL:
+        cpu->registers[operandA] *= cpu->registers[operandB];
+        cpu->PC += 3;
+        break;
+      case POP:
+        cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
+        cpu->registers[R7] += 1;
+        cpu->PC += 2;
+        break;
+      case PUSH:
+        cpu->registers[R7] -= 1;
+        cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[operandA]);
         cpu->PC += 2;
         break;
       case HLT:

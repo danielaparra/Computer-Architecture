@@ -26,8 +26,12 @@ enum alu_op {
 #define LDI  0b10000010
 #define HLT  0b00000001
 #define PRN  0b01000111
-#define R7 0b00000111
-#define SP 0xF4
+#define MUL  0b10100010
+#define R7   0b00000111
+#define POP  0b01000110
+#define PUSH 0b01000101
+#define SP   0xF4
+
 // TODO: more instructions here. These can be used in cpu_run().
 
 // Function declarations
