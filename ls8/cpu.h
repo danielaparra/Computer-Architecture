@@ -30,6 +30,8 @@ enum alu_op {
 #define R7   0b00000111
 #define POP  0b01000110
 #define PUSH 0b01000101
+#define RET  0b00010001
+#define CALL 0b01010000
 #define SP   0xF4
 
 // TODO: more instructions here. These can be used in cpu_run().
