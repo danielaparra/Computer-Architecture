@@ -50,7 +50,10 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
       cpu->PC += 3;
       break;
 
-    // TODO: implement more ALU ops
+    case ALU_ADD:
+      cpu->registers[regA] += cpu->registers[regB];
+      cpu->PC += 3;
+      break;
   }
 }
 
@@ -100,6 +103,8 @@ void cpu_run(struct cpu *cpu)
         break;
     }
 
+    printf("TRACE: %x, %d\n", IR, cpu->PC);
+
     // 4. switch() over it to decide on a course of action.
     switch (IR) {
       // 5. Do whatever the instruction should do according to the spec.
@@ -127,12 +132,12 @@ void cpu_run(struct cpu *cpu)
         break;
       case CALL:
         cpu->registers[R7] -= 1;
-        cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[cpu->PC + 1]);
+        cpu_ram_write(cpu, cpu->registers[R7], cpu->PC + 2);
         cpu->PC = cpu_ram_read(cpu, cpu->registers[operandA]);
         break;
       case RET:
         cpu->PC = cpu_ram_read(cpu, cpu->registers[R7]);
-        cpu->registers[R7] += 1;
+        cpu->registers[R7]++;
         break;
       case HLT:
         running = 0;
