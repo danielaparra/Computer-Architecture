@@ -125,6 +125,15 @@ void cpu_run(struct cpu *cpu)
         cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[operandA]);
         cpu->PC += 2;
         break;
+      case CALL:
+        cpu->registers[R7] -= 1;
+        cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[cpu->PC + 1]);
+        cpu->PC = cpu_ram_read(cpu, cpu->registers[operandA]);
+        break;
+      case RET:
+        cpu->PC = cpu_ram_read(cpu, cpu->registers[R7]);
+        cpu->registers[R7] += 1;
+        break;
       case HLT:
         running = 0;
         cpu->PC++;
