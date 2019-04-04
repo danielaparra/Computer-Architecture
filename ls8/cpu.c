@@ -103,7 +103,7 @@ void cpu_run(struct cpu *cpu)
         break;
     }
 
-    printf("TRACE: %x, %d\n", IR, cpu->PC);
+    //printf("TRACE: %x, %d\n", IR, cpu->PC);
 
     // 4. switch() over it to decide on a course of action.
     switch (IR) {
@@ -122,6 +122,7 @@ void cpu_run(struct cpu *cpu)
         break;
       case ADD: 
         alu(cpu, ALU_ADD, operandA, operandB);
+        break;
       case POP:
         cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
         cpu->registers[R7] += 1;
@@ -134,8 +135,11 @@ void cpu_run(struct cpu *cpu)
         break;
       case CALL:
         cpu->registers[R7] -= 1;
+        //printf("cpu->PC + 2: %d\n", cpu->PC + 2);
         cpu_ram_write(cpu, cpu->registers[R7], cpu->PC + 2);
-        cpu->PC = cpu_ram_read(cpu, cpu->registers[operandA]);
+        //printf("operandA: %d\n", operandA);
+        cpu->PC = cpu->registers[operandA];
+        //printf("cpu->PC: %d\n", cpu->PC);
         break;
       case RET:
         cpu->PC = cpu_ram_read(cpu, cpu->registers[R7]);
