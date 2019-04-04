@@ -120,6 +120,8 @@ void cpu_run(struct cpu *cpu)
       case MUL:
         alu(cpu, ALU_MUL, operandA, operandB);
         break;
+      case ADD: 
+        alu(cpu, ALU_ADD, operandA, operandB);
       case POP:
         cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
         cpu->registers[R7] += 1;
