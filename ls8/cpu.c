@@ -10,23 +10,6 @@
  */
 void cpu_load(struct cpu *cpu, int argc, char** argv)
 {
-  // char data[DATA_LEN] = {
-  //   // From print8.ls8
-  //   0b10000010, // LDI R0,8
-  //   0b00000000,
-  //   0b00001000,
-  //   0b01000111, // PRN R0
-  //   0b00000000,
-  //   0b00000001  // HLT
-  // };
-
-  // int address = 0;
-
-  // for (int i = 0; i < DATA_LEN; i++) {
-  //   cpu->ram[address++] = data[i];
-  // }
-
-  // TODO: Replace this with something less hard-coded
   FILE *fp;
   char line[1024];
 
@@ -42,29 +25,18 @@ void cpu_load(struct cpu *cpu, int argc, char** argv)
   }
   
   int address = 0;
-  // printf("here1\n");
   while (fgets(line, 1024, fp) != NULL) {
-  // printf("here2\n");
     if (line[0] == '#') {
-      // printf("here skip\n");
       continue;
     }
-    // printf("here3\n");
     char *binary_string = strndup(line, 8);
-    // printf("%s", *binary_string);
-    // printf("here4\n");
     unsigned char binary_val = strtol(binary_string, NULL, 2);
-    // printf("here5\n");
     cpu->ram[address] = binary_val;
-    // cpu_ram_write(cpu, address, binary_val);
-    // printf("%d\n", cpu->ram[address]);
     free(binary_string);
     address++;
   }
 
-  // printf("this\n");
-  fclose(fp);
-  
+  fclose(fp);  
 }
 
 /**
@@ -74,10 +46,14 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
 {
   switch (op) {
     case ALU_MUL:
-      // TODO
+      cpu->registers[regA] *= cpu->registers[regB];
+      cpu->PC += 3;
       break;
 
-    // TODO: implement more ALU ops
+    case ALU_ADD:
+      cpu->registers[regA] += cpu->registers[regB];
+      cpu->PC += 3;
+      break;
   }
 }
 
@@ -100,15 +76,6 @@ void cpu_ram_write(struct cpu *cpu, unsigned char address, unsigned char value) 
 }
 
 /**
- * Figure out how many operands this next instruction requires
- */
-
-int num_operands_needed(unsigned char IR) {
-  unsigned char AA = IR>>6;
-  return (int)AA;
-}
-
-/**
  * Run the CPU
  */
 void cpu_run(struct cpu *cpu)
@@ -121,7 +88,7 @@ void cpu_run(struct cpu *cpu)
     unsigned char IR = cpu_ram_read(cpu, cpu->PC);
     
     // 2. Figure out how many operands this next instruction requires
-    int num_of_operands = num_operands_needed(IR); 
+    int num_of_operands = IR>>6;
 
     // 3. Get the appropriate value(s) of the operands following this instruction
     unsigned char operandA, operandB;
@@ -136,13 +103,14 @@ void cpu_run(struct cpu *cpu)
         break;
     }
 
+    //printf("TRACE: %x, %d\n", IR, cpu->PC);
+
     // 4. switch() over it to decide on a course of action.
     switch (IR) {
       // 5. Do whatever the instruction should do according to the spec.
       // 6. Move the PC to the next instruction.
       case LDI:
         cpu->registers[operandA] = operandB;
-        //printf("%d\n", cpu->registers[operandA]);
         cpu->PC += 3;
         break;
       case PRN:
@@ -150,18 +118,29 @@ void cpu_run(struct cpu *cpu)
         cpu->PC += 2;
         break;
       case MUL:
-        cpu->registers[operandA] *= cpu->registers[operandB];
-        cpu->PC += 3;
+        alu(cpu, ALU_MUL, operandA, operandB);
+        break;
+      case ADD: 
+        alu(cpu, ALU_ADD, operandA, operandB);
         break;
       case POP:
         cpu->registers[operandA] = cpu_ram_read(cpu, cpu->registers[R7]);
-        cpu->registers[R7] += 1;
+        cpu->registers[R7]++;
         cpu->PC += 2;
         break;
       case PUSH:
-        cpu->registers[R7] -= 1;
+        cpu->registers[R7]--;
         cpu_ram_write(cpu, cpu->registers[R7], cpu->registers[operandA]);
         cpu->PC += 2;
+        break;
+      case CALL:
+        cpu->registers[R7]--;
+        cpu_ram_write(cpu, cpu->registers[R7], cpu->PC + 2);
+        cpu->PC = cpu->registers[operandA];
+        break;
+      case RET:
+        cpu->PC = cpu_ram_read(cpu, cpu->registers[R7]);
+        cpu->registers[R7]++;
         break;
       case HLT:
         running = 0;
